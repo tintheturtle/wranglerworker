@@ -4,12 +4,30 @@ addEventListener('fetch', event => {
   )
 })
 
-let URL = ''
-
 /**
  * Respond with hello worker text
  * @param {Request} request
  */
+
+class AttributeRewriter {
+  constructor(attributeName) {
+    this.attributeName = attributeName
+  }
+
+  element(element) {
+    const attribute = element.getAttribute(this.attributeName)
+    if (attribute) {
+      element.setAttribute(
+        this.attributeName,
+        attribute.replace('https://cloudflare.com', 'https://github.com/tintheturtle/wranglerworker')
+      )
+    }
+  }
+
+}
+
+const rewriter = new HTMLRewriter()
+  .on('a', new AttributeRewriter('href'))
  
 async function handleRequest(request) {
   // Getting the array of URLs from the api
@@ -27,6 +45,8 @@ async function handleRequest(request) {
     URL = variants[1]
   }
 
+  const page = await fetch(URL)
+
   // Creating redirection to variant
-  return Response.redirect(URL)
+  return rewriter.transform(page)
 }
