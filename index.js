@@ -17,17 +17,18 @@ class AttributeRewriter {
   element(element) {
     const attribute = element.getAttribute(this.attributeName)
     if (attribute) {
-      element.setAttribute(
-        this.attributeName,
-        attribute.replace('https://cloudflare.com', 'https://github.com/tintheturtle/wranglerworker')
-      )
-    }
+          element.setAttribute(
+            this.attributeName,
+            attribute.replace('https://cloudflare.com', 'https://github.com/tintheturtle/wranglerworker')
+          )
+    }   
   }
-
 }
 
+
 const rewriter = new HTMLRewriter()
-  .on('a', new AttributeRewriter('href'))
+  .on('a#url', new AttributeRewriter('href'))
+  .on('a', new AttributeRewriter('text'))
  
 async function handleRequest(request) {
   // Getting the array of URLs from the api
