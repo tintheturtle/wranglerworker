@@ -12,13 +12,21 @@ let URL = ''
  */
  
 async function handleRequest(request) {
+  // Getting the array of URLs from the api
   const response = await fetch('https://cfw-takehome.developers.workers.dev/api/variants')
   const responseURLs = await response.json()
   const variants = responseURLs.variants
-  console.log(variants)
 
+  // Generating a random chance of going to either variant
+  const random = Math.random()
+  let URL = ''
+  if (random > 0.5) {
+    URL = variants[0]
+  }
+  else {
+    URL = variants[1]
+  }
 
-  return new Response('Hello worker!', {
-    headers: { 'content-type': 'text/plain' },
-  })
+  // Creating redirection to variant
+  return Response.redirect(URL)
 }
