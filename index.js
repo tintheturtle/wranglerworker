@@ -15,7 +15,6 @@ class AttributeRewriter {
     this.attributeName = attributeName,
     this.type = type
   }
-
   element(element) {
     const attribute = element.getAttribute(this.attributeName)
     if (attribute) {
@@ -26,13 +25,14 @@ class AttributeRewriter {
               attribute.replace('https://cloudflare.com', 'https://github.com/tintheturtle')
             )
             element.setInnerContent('Check out my other github repos here!')
+            break
         }
         default: {
             element.setAttribute(
               this.attributeName,
-              attribute.replace('https://cloudflare.com', 'https://github.com/tintheturtle/wranglerworker')
+              attribute.replace('https://cloudflare.com', 'https://www.linkedin.com/in/tin-nguyen-9604b4191/')
             )
-            element.setInnerContent('Check out my repo for this take home!')
+            element.setInnerContent('Click here to see my LinkedIn!')
         }
       }
     }
@@ -44,24 +44,10 @@ class InnerElementRewriter {
   constructor(content){
     this.content = content
   }
-    
   element(element) {
       element.setInnerContent(this.content)
   }
 }
-
-// Creating a new instances of HTMLRewriter
-const rewriter = new HTMLRewriter()                   // Rewriter for without cookies
-  .on('title', new InnerElementRewriter(`Tin's Cloudflare Wrangler Serviceworker`))
-  .on('h1#title', new InnerElementRewriter(`Welcome! I'm Tin.`))
-  .on('p#description', new InnerElementRewriter(`This was actually a fun take home, I genuinely enjoyed doing it!`))
-  .on('a#url', new AttributeRewriter('href', 'normal'))
-
-const cookieRewriter = new HTMLRewriter()              // Rewriter for if cookies are found
-  .on('title', new InnerElementRewriter(`Tin's Cloudflare Wrangler Serviceworker`))
-  .on('h1#title', new InnerElementRewriter(`Welcome! I'm Tin.`))
-  .on('p#description', new InnerElementRewriter(`You have a cookie in your application storage!`))
-  .on('a#url', new CookieAttributeRewriter('href'))
 
 // handleRequest function
 async function handleRequest(request) {
@@ -69,6 +55,7 @@ async function handleRequest(request) {
   // Getting cookies from request headers
   const cookies = request.headers.get('cookie').split(';')
   let cookieURL
+  let variant
 
   // Looping through cookies to see if there is a URL cookie 
   cookies.forEach(async cookie => {
@@ -76,18 +63,34 @@ async function handleRequest(request) {
     const trimmedCookie = cookie.trim()
     if (trimmedCookie === 'URL=https://cfw-takehome.developers.workers.dev/variants/1' || trimmedCookie === 'URL=https://cfw-takehome.developers.workers.dev/variants/2'){
       cookieURL = trimmedCookie.split('=')[1]
+      variant = cookieURL[cookieURL.length-1]
     }
   })
 
   // If there is a URL cookie, then respond with the appropriate URL
   if (cookieURL) {
-    const cookieResponse = await fetch(cookieURL)
+    // Create an instance of the HTMLRewriter
+    const cookieRewriter = new HTMLRewriter()              // Rewriter for if cookies are found
+      .on('title', new InnerElementRewriter(`Tin's Cloudflare Wrangler Serviceworker`))
+      .on('h1#title', new InnerElementRewriter(`Welcome! I'm Tin.`))
+      .on('p#description', new InnerElementRewriter(`You have a cookie in your application storage! You have variant ${variant}.`))
+      .on('a#url', new AttributeRewriter('href', 'cookie'))
+
+    // Fetch URL and rewrite response
+    const cookieResponse = await fetch(cookieURL).catch(err => {
+      return new Response('An error has occurred while fetching the variant. Please try again.', {
+        headers: { 'content-type': 'text/plain' },
+      })
+    })
     return cookieRewriter.transform(cookieResponse)
   }
 
-
   // Getting the array of URLs from the api
-  const variantsFetch = await fetch('https://cfw-takehome.developers.workers.dev/api/variants')
+  const variantsFetch = await fetch('https://cfw-takehome.developers.workers.dev/api/variants').catch(err => {
+    return new Response('An error has occurred while attempting to fetch the API. Please try again.', {
+      headers: { 'content-type': 'text/plain'},
+    })
+  })
   const responseURLs = await variantsFetch.json()
   const variants = responseURLs.variants
 
@@ -102,7 +105,11 @@ async function handleRequest(request) {
   }
 
   // Make fetch request to variant URL
-  const response = await fetch(URL)
+  const response = await fetch(URL).catch(err => {
+    return new Response('An error has occurred while fetching the variant. Please try again.', {
+      headers: { 'content-type': 'text/plain' },
+    })
+  })
 
   // Create a response to return using variant fetched
   const pageResponse = new Response(response.body, response)
@@ -110,6 +117,12 @@ async function handleRequest(request) {
   // Set cookies with URL
   pageResponse.headers.set("Set-Cookie", `URL=${URL}; expires=Thu, 18 Dec 2020 12:00:00 UTC`)
 
+  // Creating a new instance of HTMLRewriter
+  const rewriter = new HTMLRewriter()                   // Rewriter for without cookies
+    .on('title', new InnerElementRewriter(`Tin's Cloudflare Wrangler Serviceworker`))
+    .on('h1#title', new InnerElementRewriter(`Welcome! I'm Tin.`))
+    .on('p#description', new InnerElementRewriter(`This was actually a fun take home to do. I genuinely enjoyed doing it!`))
+    .on('a#url', new AttributeRewriter('href', 'normal'))
 
   // Using HTMLRewriter API to change elements in page
   return rewriter.transform(pageResponse)
