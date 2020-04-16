@@ -76,18 +76,34 @@ async function handleRequest(request) {
       .on('p#description', new InnerElementRewriter(`You have a cookie in your application storage! You have variant ${variant}.`))
       .on('a#url', new AttributeRewriter('href', 'cookie'))
 
-    // Fetch URL and rewrite response
-    const cookieResponse = await fetch(cookieURL).catch(err => {
-      return new Response('An error has occurred while fetching the variant. Please try again.', {
-        headers: { 'content-type': 'text/plain' },
+    // Fetch URL, check for errors and then rewrite response
+    const cookieResponse = await fetch(cookieURL)
+      .then((response) => {
+        if(response.ok) {
+          return response
+        } else {
+          throw new Error('An error has occurred while fetching the variant. Please try again.')
+        }
       })
-    })
+      .catch(err => {
+        return new Response('A network error has occurred. Please try again.', {
+          headers: { 'content-type': 'text/plain' },
+        })
+      })
     return cookieRewriter.transform(cookieResponse)
   }
 
   // Getting the array of URLs from the api
-  const variantsFetch = await fetch('https://cfw-takehome.developers.workers.dev/api/variants').catch(err => {
-    return new Response('An error has occurred while attempting to fetch the API. Please try again.', {
+  const variantsFetch = await fetch('https://cfw-takehome.developers.workers.dev/api/variants')
+    .then((response) => {
+      if(response.ok) {
+        return response
+      } else {
+        throw new Error('An error has occurred while fetching API. Please try again.')
+      }
+    })
+    .catch(err => {
+    return new Response('A network error has occurred. Please try again.', {
       headers: { 'content-type': 'text/plain'},
     })
   })
@@ -105,11 +121,19 @@ async function handleRequest(request) {
   }
 
   // Make fetch request to variant URL
-  const response = await fetch(URL).catch(err => {
-    return new Response('An error has occurred while fetching the variant. Please try again.', {
-      headers: { 'content-type': 'text/plain' },
+  const response = await fetch(URL)
+    .then((response) => {
+      if(response.ok) {
+        return response
+      } else {
+        throw new Error('An error has occurred while fetching the variant. Please try again.')
+      }
     })
-  })
+    .catch(err => {
+      return new Response('A network error has occurred. Please try again.', {
+        headers: { 'content-type': 'text/plain' },
+      })
+    })
 
   // Create a response to return using variant fetched
   const pageResponse = new Response(response.body, response)
