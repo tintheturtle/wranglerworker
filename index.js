@@ -9,20 +9,21 @@ addEventListener('fetch', event => {
  * @param {Request} request
  */
 
+// Attribute rewriter class using HTMLRewriter API
 class AttributeRewriter {
   constructor(attributeName) {
     this.attributeName = attributeName
   }
 
   element(element) {
-
+    // Switch statements for changing elements based off of attributeName
     switch(this.attributeName) {
       case 'title': {
         element.setInnerContent(`Tin's Cloudflare Wrangler Serviceworker`)
         break
       }
       case 'h1': {
-        element.setInnerContent(`Welcome! I'm Tin`)
+        element.setInnerContent(`Welcome! I'm Tin.`)
         break
       }
       case 'description': {        
@@ -44,18 +45,63 @@ class AttributeRewriter {
   }
 }
 
+// Attribute rewriter class using HTMLRewriter API
+class CookieAttributeRewriter {
+  constructor(attributeName) {
+    this.attributeName = attributeName
+  }
 
-const rewriter = new HTMLRewriter()
+  element(element) {
+    // Switch statements for changing elements based off of attributeName
+    switch(this.attributeName) {
+      case 'title': {
+        element.setInnerContent(`Tin's Cloudflare Wrangler Serviceworker`)
+        break
+      }
+      case 'h1': {
+        element.setInnerContent(`Welcome! I'm Tin.`)
+        break
+      }
+      case 'description': {        
+        element.setInnerContent(`You have a cookie in your application storage!`)
+        break
+      }
+      case 'href': {
+        const attribute = element.getAttribute(this.attributeName)
+        if (attribute) {
+              element.setAttribute(
+                this.attributeName,
+                attribute.replace('https://cloudflare.com', 'https://github.com/tintheturtle')
+              )
+              element.setInnerContent('Check out my other github repos here!')
+        } 
+        break
+      }
+    } 
+  }
+}
+
+// Creating a new instances of HTMLRewriter
+const rewriter = new HTMLRewriter()                   // Rewriter for without cookies
   .on('title', new AttributeRewriter('title'))
   .on('h1#title', new AttributeRewriter('h1'))
   .on('p#description', new AttributeRewriter('description'))
   .on('a#url', new AttributeRewriter('href'))
 
- 
+const cookieRewriter = new HTMLRewriter()              // Rewriter for if cookies are found
+  .on('title', new CookieAttributeRewriter('title'))
+  .on('h1#title', new CookieAttributeRewriter('h1'))
+  .on('p#description', new CookieAttributeRewriter('description'))
+  .on('a#url', new CookieAttributeRewriter('href'))
+
+// handleRequest function
 async function handleRequest(request) {
 
+  // Getting cookies from request headers
   const cookies = request.headers.get('cookie').split(';')
   let cookieURL
+
+  // Looping through cookies to see if there is a URL cookie 
   cookies.forEach(async cookie => {
     
     const trimmedCookie = cookie.trim()
@@ -64,13 +110,11 @@ async function handleRequest(request) {
     }
   })
 
+  // If there is a URL cookie, then respond with the appropriate URL
   if (cookieURL) {
     const cookieResponse = await fetch(cookieURL)
-    return cookieResponse
-
+    return cookieRewriter.transform(cookieResponse)
   }
-
-
 
 
   // Getting the array of URLs from the api
