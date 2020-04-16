@@ -18,7 +18,7 @@ class AttributeRewriter {
 
     switch(this.attributeName) {
       case 'title': {
-        element.setInnerContent(`Tin`)
+        element.setInnerContent(`Tin's Cloudflare Wrangler Serviceworker`)
         break
       }
       case 'h1': {
@@ -40,8 +40,7 @@ class AttributeRewriter {
         } 
         break
       }
-    }
-      
+    } 
   }
 }
 
@@ -54,9 +53,29 @@ const rewriter = new HTMLRewriter()
 
  
 async function handleRequest(request) {
+
+  const cookies = request.headers.get('cookie').split(';')
+  let cookieURL
+  cookies.forEach(async cookie => {
+    
+    const trimmedCookie = cookie.trim()
+    if (trimmedCookie === 'URL=https://cfw-takehome.developers.workers.dev/variants/1' || trimmedCookie === 'URL=https://cfw-takehome.developers.workers.dev/variants/2'){
+      cookieURL = trimmedCookie.split('=')[1]
+    }
+  })
+
+  if (cookieURL) {
+    const cookieResponse = await fetch(cookieURL)
+    return cookieResponse
+
+  }
+
+
+
+
   // Getting the array of URLs from the api
-  const response = await fetch('https://cfw-takehome.developers.workers.dev/api/variants')
-  const responseURLs = await response.json()
+  const variantsFetch = await fetch('https://cfw-takehome.developers.workers.dev/api/variants')
+  const responseURLs = await variantsFetch.json()
   const variants = responseURLs.variants
 
   // Generating a random chance of going to either variant
@@ -69,8 +88,16 @@ async function handleRequest(request) {
     URL = variants[1]
   }
 
-  const page = await fetch(URL)
+  // Make fetch request to variant URL
+  const response = await fetch(URL)
 
-  // Creating redirection to variant
-  return rewriter.transform(page)
+  // Create a response to return using variant fetched
+  const pageResponse = new Response(response.body, response)
+
+  // Set cookies with URL
+  pageResponse.headers.set("Set-Cookie", `URL=${URL}; expires=Thu, 18 Dec 2020 12:00:00 UTC`)
+
+
+  // Using HTMLRewriter API to change elements in page
+  return rewriter.transform(pageResponse)
 }
