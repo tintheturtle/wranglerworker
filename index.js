@@ -16,82 +16,59 @@ class AttributeRewriter {
   }
 
   element(element) {
-    // Switch statements for changing elements based off of attributeName
-    switch(this.attributeName) {
-      case 'title': {
-        element.setInnerContent(`Tin's Cloudflare Wrangler Serviceworker`)
-        break
-      }
-      case 'h1': {
-        element.setInnerContent(`Welcome! I'm Tin.`)
-        break
-      }
-      case 'description': {        
-        element.setInnerContent(`This was actually a fun take home, I genuinely enjoyed doing it.`)
-        break
-      }
-      case 'href': {
-        const attribute = element.getAttribute(this.attributeName)
-        if (attribute) {
-              element.setAttribute(
-                this.attributeName,
-                attribute.replace('https://cloudflare.com', 'https://github.com/tintheturtle/wranglerworker')
-              )
-              element.setInnerContent('Check out my repo for this take home!')
-        } 
-        break
-      }
+      const attribute = element.getAttribute(this.attributeName)
+      if (attribute) {
+        element.setAttribute(
+          this.attributeName,
+          attribute.replace('https://cloudflare.com', 'https://github.com/tintheturtle')
+        )
+              element.setInnerContent('Check out my other github repos here!')
+        
     } 
   }
 }
 
-// Attribute rewriter class using HTMLRewriter API
+// Cookie attribute rewriter class using HTMLRewriter API
 class CookieAttributeRewriter {
   constructor(attributeName) {
     this.attributeName = attributeName
   }
 
   element(element) {
-    // Switch statements for changing elements based off of attributeName
-    switch(this.attributeName) {
-      case 'title': {
-        element.setInnerContent(`Tin's Cloudflare Wrangler Serviceworker`)
-        break
-      }
-      case 'h1': {
-        element.setInnerContent(`Welcome! I'm Tin.`)
-        break
-      }
-      case 'description': {        
-        element.setInnerContent(`You have a cookie in your application storage!`)
-        break
-      }
-      case 'href': {
-        const attribute = element.getAttribute(this.attributeName)
-        if (attribute) {
-              element.setAttribute(
-                this.attributeName,
-                attribute.replace('https://cloudflare.com', 'https://github.com/tintheturtle')
-              )
+      const attribute = element.getAttribute(this.attributeName)
+      if (attribute) {
+        element.setAttribute(
+          this.attributeName,
+          attribute.replace('https://cloudflare.com', 'https://github.com/tintheturtle')
+        )
               element.setInnerContent('Check out my other github repos here!')
-        } 
-        break
-      }
+        
     } 
+  }
+}
+
+// Setting inner element rewriter
+class InnerElementRewriter {
+  constructor(content){
+    this.content = content
+  }
+    
+  element(element) {
+      element.setInnerContent(this.content)
   }
 }
 
 // Creating a new instances of HTMLRewriter
 const rewriter = new HTMLRewriter()                   // Rewriter for without cookies
-  .on('title', new AttributeRewriter('title'))
-  .on('h1#title', new AttributeRewriter('h1'))
-  .on('p#description', new AttributeRewriter('description'))
+  .on('title', new InnerElementRewriter(`Tin's Cloudflare Wrangler Serviceworker`))
+  .on('h1#title', new InnerElementRewriter(`Welcome! I'm Tin.`))
+  .on('p#description', new InnerElementRewriter(`This was actually a fun take home, I genuinely enjoyed doing it!`))
   .on('a#url', new AttributeRewriter('href'))
 
 const cookieRewriter = new HTMLRewriter()              // Rewriter for if cookies are found
-  .on('title', new CookieAttributeRewriter('title'))
-  .on('h1#title', new CookieAttributeRewriter('h1'))
-  .on('p#description', new CookieAttributeRewriter('description'))
+  .on('title', new InnerElementRewriter(`Tin's Cloudflare Wrangler Serviceworker`))
+  .on('h1#title', new InnerElementRewriter(`Welcome! I'm Tin.`))
+  .on('p#description', new InnerElementRewriter(`You have a cookie in your application storage!`))
   .on('a#url', new CookieAttributeRewriter('href'))
 
 // handleRequest function
