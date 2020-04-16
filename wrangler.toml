@@ -1,6 +1,6 @@
-name = "workers"
+name = "wrangler-worker"
 type = "javascript"
-account_id = ""
+account_id = "75897ad970d4b7c1959f116dc9df554b"
 workers_dev = true
 route = ""
 zone_id = ""
