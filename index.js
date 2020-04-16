@@ -11,39 +11,31 @@ addEventListener('fetch', event => {
 
 // Attribute rewriter class using HTMLRewriter API
 class AttributeRewriter {
-  constructor(attributeName) {
-    this.attributeName = attributeName
+  constructor(attributeName, type) {
+    this.attributeName = attributeName,
+    this.type = type
   }
 
   element(element) {
-      const attribute = element.getAttribute(this.attributeName)
-      if (attribute) {
-        element.setAttribute(
-          this.attributeName,
-          attribute.replace('https://cloudflare.com', 'https://github.com/tintheturtle')
-        )
-              element.setInnerContent('Check out my other github repos here!')
-        
-    } 
-  }
-}
-
-// Cookie attribute rewriter class using HTMLRewriter API
-class CookieAttributeRewriter {
-  constructor(attributeName) {
-    this.attributeName = attributeName
-  }
-
-  element(element) {
-      const attribute = element.getAttribute(this.attributeName)
-      if (attribute) {
-        element.setAttribute(
-          this.attributeName,
-          attribute.replace('https://cloudflare.com', 'https://github.com/tintheturtle')
-        )
-              element.setInnerContent('Check out my other github repos here!')
-        
-    } 
+    const attribute = element.getAttribute(this.attributeName)
+    if (attribute) {
+      switch(this.type) {
+        case 'cookie': {
+            element.setAttribute(
+              this.attributeName,
+              attribute.replace('https://cloudflare.com', 'https://github.com/tintheturtle')
+            )
+            element.setInnerContent('Check out my other github repos here!')
+        }
+        default: {
+            element.setAttribute(
+              this.attributeName,
+              attribute.replace('https://cloudflare.com', 'https://github.com/tintheturtle/wranglerworker')
+            )
+            element.setInnerContent('Check out my repo for this take home!')
+        }
+      }
+    }
   }
 }
 
@@ -63,7 +55,7 @@ const rewriter = new HTMLRewriter()                   // Rewriter for without co
   .on('title', new InnerElementRewriter(`Tin's Cloudflare Wrangler Serviceworker`))
   .on('h1#title', new InnerElementRewriter(`Welcome! I'm Tin.`))
   .on('p#description', new InnerElementRewriter(`This was actually a fun take home, I genuinely enjoyed doing it!`))
-  .on('a#url', new AttributeRewriter('href'))
+  .on('a#url', new AttributeRewriter('href', 'normal'))
 
 const cookieRewriter = new HTMLRewriter()              // Rewriter for if cookies are found
   .on('title', new InnerElementRewriter(`Tin's Cloudflare Wrangler Serviceworker`))
