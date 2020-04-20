@@ -53,19 +53,22 @@ class InnerElementRewriter {
 async function handleRequest(request) {
 
   // Getting cookies from request headers
-  const cookies = request.headers.get('cookie').split(';')
+  const cookiesHeaders = request.headers.get('cookie')
+  
+  let cookies
   let cookieURL
   let variant
 
-  // Looping through cookies to see if there is a URL cookie 
-  cookies.forEach(async cookie => {
-    
-    const trimmedCookie = cookie.trim()
-    if (trimmedCookie === 'URL=https://cfw-takehome.developers.workers.dev/variants/1' || trimmedCookie === 'URL=https://cfw-takehome.developers.workers.dev/variants/2'){
-      cookieURL = trimmedCookie.split('=')[1]
-      variant = cookieURL[cookieURL.length-1]
+  if (cookiesHeaders) {
+    cookies = cookiesHeaders.split(';')
+    for (let i = 0; i < cookies.length; i++) {
+      const trimmedCookie = cookies[i].trim()
+      if (trimmedCookie === 'URL=https://cfw-takehome.developers.workers.dev/variants/1' || trimmedCookie === 'URL=https://cfw-takehome.developers.workers.dev/variants/2'){
+        cookieURL = trimmedCookie.split('=')[1]
+        variant = cookieURL[cookieURL.length-1]
+      }
     }
-  })
+  }
 
   // If there is a URL cookie, then respond with the appropriate URL
   if (cookieURL) {
